@@ -60,23 +60,8 @@ struct SimpleShader : public IShader
 
     virtual bool fragment(Vec3f bar, Vec4i &color)
     {
-        color = WHITE;
-        
-        /*mat<4, 3, float> colors;
-        colors.set_col(0, RED);
-        colors.set_col(1, GREEN);
-        colors.set_col(2, BLUE);
-        Vec4f colorf = colors * bar;
-        color = Vec4i(colorf[0], colorf[1], colorf[2], colorf[3]);*/
 
-        //Vec2f uv = texcoords2D * bar;
-
-        // Vec3f p_ss = fragPoses_screenSpace * bar;
-        //Vec2f uv = perspectiveCorrect(bar, fragPoses_depth_clipSpace, texcoords2D);
-
-        //color = texture->getTexture2Di(uv[0], uv[1], id_tex, BILINEAR);
-        //color = texture->getTexture2Di(uv[0], uv[1], id_tex);
-        //color = texture->getTexture2Di_midmap(uv,(round)(p_ss.x), (round)(p_ss.y), id_tex, uvBuffer);
+        color = Vec4i((uint8_t)(255 * bar.x), (uint8_t)(255 * bar.y), (uint8_t)(255 * bar.z), 255);
 
         return false;
     }

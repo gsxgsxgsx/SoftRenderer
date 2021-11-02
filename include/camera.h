@@ -153,6 +153,10 @@ struct Camera
         right = cross(front, Vec3f(0, 1, 0)).normalize(); // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
         up = cross(right, front).normalize();
     }
+
+    Matrix update(){
+        return lookat(eye,center,up);
+    }
 };
 
 #endif

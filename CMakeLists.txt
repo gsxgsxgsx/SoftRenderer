@@ -22,7 +22,7 @@ link_libraries(${GLFW_LINK})
 
 
 # 执行编译命令
-set(SOURCES  data_model.cpp geometry.cpp math.cpp our_gl.cpp data_input.cpp main.cpp)
+set(SOURCES  imgui-master/imgui.cpp imgui-master/imgui_demo.cpp imgui-master/imgui_draw.cpp imgui-master/imgui_tables.cpp imgui-master/imgui_widgets.cpp imgui-master/backends/imgui_impl_glfw.cpp imgui-master/backends/imgui_impl_opengl3.cpp data_model.cpp geometry.cpp math.cpp our_gl.cpp data_input.cpp main.cpp)
 
 add_executable(TinyRenderer ${SOURCES})
 

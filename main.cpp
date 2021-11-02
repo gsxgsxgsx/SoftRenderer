@@ -28,6 +28,16 @@
 #include "shader/pre_genSkyBox_Shader.h"
 #include "shader/Skybox_Shader.h"
 
+#include "imgui-master/imgui.h"
+#include "imgui-master/imconfig.h"
+#include "imgui-master/imgui_internal.h"
+#include "imgui-master/imstb_rectpack.h"
+#include "imgui-master/imstb_textedit.h"
+#include "imgui-master/imstb_truetype.h"
+
+#include "imgui-master/backends/imgui_impl_glfw.h"
+#include "imgui-master/backends/imgui_impl_opengl3.h"
+
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 800;
 
@@ -39,17 +49,58 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-//Vec3f eye(-3.0, 3.4, -4);
-Vec3f eye(0.3, 0.05, 4);
+Vec3f eye(3.0, 3.4, 4);
+//Vec3f eye(0.3, 0.05, 4);
 Vec3f center(0, 0, 0);
 Vec3f up(0, 1, 0);
 Vec3f front(0, 0, -1);
 
 Camera camera(eye, center, up);
 
+#if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
+#pragma comment(lib, "legacy_stdio_definitions")
+#endif
+
+static void glfw_error_callback(int error, const char *description)
+{
+    fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
+Vec4i getBackGroundC(ImVec4 &clear_color)
+{
+    return Vec4i(255 * clear_color.x * clear_color.w, 255 * clear_color.y * clear_color.w, 255 * clear_color.z * clear_color.w, 255 * clear_color.w);
+}
+void saveImage(FrameBuffer& fbuffer){
+     stbi_flip_vertically_on_write(true);
+     stbi_write_png("output.png", SCR_WIDTH, SCR_HEIGHT, 4, fbuffer.colorBuffer, SCR_WIDTH * 4);
+      
+}
 int main(int argc, char **argv)
 {
     initWindow();
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+
+    // Setup style
+    ImGui::StyleColorsDark();
+
+    // Setup Platform/Renderer backends
+    // GL 3.2 + GLSL 150
+    const char *glsl_version = "#version 150";
+
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    // Our state
+    bool show_render_window = false;
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+    //------------------------------------------------------------------------------------------
+
     FrameBuffer fbuffer(SCR_WIDTH, SCR_HEIGHT);
 
     Matrix viewMat = lookat(eye, center, up);
@@ -57,175 +108,96 @@ int main(int argc, char **argv)
     // Matrix projMat = projection(89.f, SCR_WIDTH / SCR_HEIGHT, 0.1f, -0.9f);
     Matrix projMat = projection(50.f, SCR_WIDTH / SCR_HEIGHT, 9.f, -0.1f);
 
-    //------------------------------------------------------------------------------------------
+    Matrix modelMat = Matrix::identity();
 
-    std::vector<std::string> _aos = {
-        "resources/pbr/streaky-metal1-unity/streaky-metal1_ao.png",
-        "resources/pbr/worn-shiny-metal-unity/worn-shiny-metal-ao.png",
-        "resources/pbr/rock-slab-wall1-unity/rock-slab-wall_ao.png",
-        "resources/pbr/scuffed-plastic-1-bl/scuffed-plastic5-ao.png"};
-    std::vector<std::string> _albedos = {
-        "resources/pbr/streaky-metal1-unity/streaky-metal1_albedo.png",
-        "resources/pbr/worn-shiny-metal-unity/worn-shiny-metal-albedo.png",
-        "resources/pbr/rock-slab-wall1-unity/rock-slab-wall_albedo.png",
-        "resources/pbr/scuffed-plastic-1-bl/scuffed-plastic5-alb.png",
-        "resources/pbr/oxidized-copper-ue/oxidized-copper-albedo.png"};
-
-    std::vector<std::string> _tnormals = {
-        "resources/pbr/streaky-metal1-unity/streaky-metal1_normal-ogl.png",
-        "resources/pbr/worn-shiny-metal-unity/worn-shiny-metal-Normal-ogl.png",
-        "resources/pbr/rock-slab-wall1-unity/rock-slab-wall_normal-ogl.png",
-        "resources/pbr/scuffed-plastic-1-bl/scuffed-plastic-normal.png",
-        "resources/pbr/oxidized-copper-ue/oxidized-copper-normal-ue.png"};
-
-    std::vector<std::string> _materials = {
-        "resources/pbr/streaky-metal1-unity/streaky-metal1_metallic.psd",
-        "resources/pbr/worn-shiny-metal-unity/worn-shiny-metal-Metallic.psd",
-        "resources/pbr/rock-slab-wall1-unity/rock-slab-wall_metallic.psd",
-        "resources/pbr/scuffed-plastic-1-bl/scuffed-plastic-metal.png",
-        "resources/pbr/oxidized-copper-ue/oxidized-copper-metal.png"};
-
-    //std::string _rough = "resources/pbr/scuffed-plastic-1-bl/scuffed-plastic-rough.png";
-    std::string _rough = "resources/pbr/oxidized-copper-ue/oxidized-coppper-roughness.png";
-
-    std::string _env = "resources/hdr/snow_machine/test8_Env.hdr";
-    std::string _bg = "resources/hdr/snow_machine/test8_Bg.jpg";
-    std::string _ref = "resources/hdr/snow_machine/test8_Ref.hdr";
-
-    std::string _brdf = "resources/hdr/ibl_brdf_lut.png";
-
-    Texture texture;
-    /*  int id_aoes[4], id_albedoes[4], id_tns[4], id_ms[4];
-    for (int i = 0; i < 4; i++)
-    {
-        id_aoes[i] = texture.loadTexture(_aos[i]);
-        id_albedoes[i] = texture.loadTexture(_albedos[i]);
-        id_tns[i] = texture.loadTexture(_tnormals[i]);
-        id_ms[i] = texture.loadTexture(_materials[i]);
-    }*/
-
-    int id_r = texture.loadTexture(_rough);
-
-    int id_bg = texture.loadTexture(_bg);
-    int id_irr = texture.loadTexture(_env);
-    int id_ref = texture.loadTexture(_ref);
-    int id_ibl_irradiance = 0;
-    int id_ibl_specular = 0;
-    int id_brdf = texture.loadTexture(_brdf);
-
-    //读取辐照度ibl贴图------------------------------------------------------------------------------------------
     Model *obj_cube = new Model("resources/obj/cube/cube.obj");
-    std::vector<Matrix> cubemap_viewmats;
-    for (int i = 0; i < 6; i++)
-        cubemap_viewmats.push_back(lookat(Vec3f(0, 0, 0), cubemap_dirs[i], cubemap_ups[i]));
+    SimpleShader shader(modelMat, viewMat, projMat, viewPortMat);//default
+    shader.setData(obj_cube);
 
-    Matrix projMat_sp = projection(90.f, SCR_WIDTH / SCR_HEIGHT, 2, -10.f);
-    ///
-    std::vector<Image> irramaps;
-    for (int i = 0; i < 6; i++)
-        irramaps.push_back(Image(SCR_WIDTH, SCR_HEIGHT, 3, FLOAT));
-
-    GenSkyboxShader gshader(Matrix::identity(), Matrix::identity(), projMat_sp, viewPortMat);
-    gshader.setTexture(&texture);
-    gshader.setData(obj_cube);
-    gshader.id = id_irr;
-    gshader.type = HDR;
-
-    for (int i = 0; i < 6; i++)
-    {
-        gshader.view = cubemap_viewmats[i];
-        gshader.image = &irramaps[i];
-        render(gshader, &fbuffer, TRIANGLE);
-
-        int id_ = texture.setTexture(irramaps[i]);
-        if (i == 0)
-            id_ibl_irradiance = id_;
-
-        //stbi_flip_vertically_on_write(true);
-        //stbi_write_png(cubemap_output_paths[i].c_str(), SCR_WIDTH, SCR_HEIGHT, 4, fbuffer.colorBuffer, SCR_WIDTH * 4);
-        fbuffer.clearBuffer();
-    }
-
-    //读取镜面ibl贴图------------------------------------------------------------------------------------------
-    std::vector<Image> specmaps;
-    for (int i = 0; i < 6; i++)
-        specmaps.push_back(Image(SCR_WIDTH, SCR_HEIGHT, 3, FLOAT));
-    gshader.id = id_ref;
-    gshader.type = HDR;
-
-    for (int i = 0; i < 6; i++)
-    {
-        gshader.view = cubemap_viewmats[i];
-        gshader.image = &specmaps[i];
-        render(gshader, &fbuffer, TRIANGLE);
-
-        int id_ = texture.setTexture(specmaps[i]);
-        if (i == 0)
-            id_ibl_specular = id_;
-
-        fbuffer.clearBuffer();
-
-        //stbi_flip_vertically_on_write(true);
-        //stbi_write_png(cubemap_output_paths[i].c_str(), SCR_WIDTH, SCR_HEIGHT, 4, fbuffer.colorBuffer, SCR_WIDTH * 4);
-    }
-    //LUT------------------------------------------------------------------------------------------
-    /*Image lut(300, 300, 3, FLOAT);
-    for (int i = 0; i < 300; i++)
-    {
-        for (int j = 0; j < 300; j++)
-        {
-            float nw = i / 300.f;
-            float roughness = i / 300.f;
-        }
-    }*/
-    //渲染背景------------------------------------------------------------------------------------------
-    std::vector<Image> skyboxmaps;
-    for (int i = 0; i < 6; i++)
-        skyboxmaps.push_back(Image(SCR_WIDTH, SCR_HEIGHT, 3, UINT));
-
-    gshader.id = id_bg;
-    gshader.type = LDR;
-    int id_skybox;
-    for (int i = 0; i < 6; i++)
-    {
-        gshader.view = cubemap_viewmats[i];
-        gshader.image = &skyboxmaps[i];
-        render(gshader, &fbuffer, TRIANGLE);
-
-        int id_ = texture.setTexture(skyboxmaps[i]);
-        if (i == 0)
-            id_skybox = id_;
-
-        stbi_flip_vertically_on_write(true);
-        stbi_write_png(cubemap_output_paths[i].c_str(), SCR_WIDTH, SCR_HEIGHT, 4, fbuffer.colorBuffer, SCR_WIDTH * 4);
-        fbuffer.clearBuffer();
-    }
-    SkyboxShader skyshader(Matrix::identity(), viewMat, projMat, viewPortMat);
-    skyshader.setTexture(&texture);
-    skyshader.setData(obj_cube);
-    // skyshader.id_ = id_ibl_irradiance;
-    //skyshader.type=HDR;
-    skyshader.id_ = id_skybox;
-    skyshader.type = LDR;
-    render(skyshader, &fbuffer, TRIANGLE);
-
-    //------------------------------------------------------------------------------------------
+    //相机参数
+    float test[3];
+    float fov = 40;
     while (!glfwWindowShouldClose(window))
     {
+        glfwPollEvents();
+
+        fbuffer.clearColor(getBackGroundC(clear_color));
+        fbuffer.clearZBuffer();
+        shader.view=camera.update();
+        render(shader, &fbuffer, TRIANGLE);
+
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // 教程1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+        //ImGui::ShowDemoWindow(&show_demo_window);
+
+        {
+            ImGui::Begin("Render Window", &show_render_window); // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+
+            glEnable(GL_TEXTURE_2D);
+            unsigned int textureID;
+            glGenTextures(1, &textureID);
+            glBindTexture(GL_TEXTURE_2D, textureID);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Set texture wrapping to GL_REPEAT
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Set texture filtering
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 800, 800, 0, GL_RGBA, GL_UNSIGNED_BYTE, fbuffer.colorBuffer);
+
+            ImGui::Image((void *)(intptr_t)textureID, ImVec2(SCR_WIDTH, SCR_HEIGHT));
+
+            ImGui::End();
+        }
+        {
+            static float f = 0.0f;
+            static int counter = 0;
+
+            ImGui::Begin("^u^ let's start rendering!"); // Create a window called "Hello, world!" and append into it.
+
+            //ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
+            ImGui::RadioButton("campera", true);
+
+            ImGui::SliderFloat("fov", &fov, 0, 90);
+            ImGui::SliderFloat("camera pos-x:", &camera.eye.x, -20, 20);
+            ImGui::SliderFloat("camera pos-y:", &camera.eye.y, -20, 20);
+            ImGui::SliderFloat("camera pos-z:", &camera.eye.z, -20, 20);
+
+            //ImGui::Checkbox("Ambient Occlusion", true); // Edit bools storing our window open/close state
+
+            ImGui::ColorEdit3("clear color", (float *)&clear_color); // Edit 3 floats representing a color
+
+            if (ImGui::Button("load obj~")) // Buttons return true when clicked (most widgets return true when edited/activated)
+                counter++;
+            ImGui::SameLine();
+            ImGui::Text("counter = %d", counter);
+
+            if (ImGui::Button("save")) saveImage(fbuffer);
+
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::End();
+        }
+
+        // Rendering
+        ImGui::Render();
+
+        int display_w, display_h;
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         processInput(window);
 
-        fbuffer.clearBuffer();
-
-        glDrawPixels(SCR_WIDTH, SCR_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, fbuffer.colorBuffer);
-
-        stbi_flip_vertically_on_write(true);
-        stbi_write_png("output.png", SCR_WIDTH, SCR_HEIGHT, 4, fbuffer.colorBuffer, SCR_WIDTH * 4);
-
         glfwSwapBuffers(window);
-        glfwPollEvents();
     }
 
     //delete objmodel;
@@ -302,7 +274,15 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 
 int initWindow()
 {
-    glfwInit();
+    glfwSetErrorCallback(glfw_error_callback);
+    if (!glfwInit())
+        return 1;
+
+    // Decide GL+GLSL versions
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           // Required on Mac
 
     window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "tinyRender", NULL, NULL);
 
@@ -314,10 +294,13 @@ int initWindow()
     }
 
     glfwMakeContextCurrent(window);
+
+    glfwSwapInterval(1); // Enable vsync
+
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
+   // glfwSetMouseButtonCallback(window, mouse_button_callback);
+   // glfwSetCursorPosCallback(window, mouse_callback);
+   // glfwSetScrollCallback(window, scroll_callback);
 
     //隐藏光标
     //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
