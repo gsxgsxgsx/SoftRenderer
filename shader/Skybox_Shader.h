@@ -63,8 +63,8 @@ struct SkyboxShader : public IShader
         Vec3f v = (eyePos - proj<3>(gl_Vertex));
         if (n * v > 0)
         {
-            // std::cout << "failed" << std::endl;
-            // return Vec4f(__FLT_MIN__, -1, depth, -1);
+             std::cout << "failed" << std::endl;
+             return Vec4f(__FLT_MIN__, -1, depth, -1);
         }
 
         for (int i = 0; i < 3; i++)
@@ -75,7 +75,7 @@ struct SkyboxShader : public IShader
         perspectiveDivide(gl_Vertex);
         gl_Vertex = viewPort * gl_Vertex;
 
-        // gl_Vertex[2] = depth;//须视锥裁剪才可开启
+         //gl_Vertex[2] = depth;//须视锥裁剪才可开启
 
         return gl_Vertex;
     }
@@ -86,7 +86,7 @@ struct SkyboxShader : public IShader
 
         if (type == LDR)
         {
-            //uv = uv * (-1.f);
+            uv = uv * (-1.f);
             color = texture->getTexture3Di(uv, id_);
         }
         else if (type == HDR)

@@ -49,13 +49,14 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-Vec3f eye(3.0, 3.4, 4);
-//Vec3f eye(0.3, 0.05, 4);
+//Vec3f eye(3.0, 3.4, 4);
+Vec3f eye(0.03, 0.0, -0.4);
 Vec3f center(0, 0, 0);
 Vec3f up(0, 1, 0);
 Vec3f front(0, 0, -1);
 
 Camera camera(eye, center, up);
+float fov = 40;
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
 #pragma comment(lib, "legacy_stdio_definitions")
@@ -69,10 +70,10 @@ Vec4i getBackGroundC(ImVec4 &clear_color)
 {
     return Vec4i(255 * clear_color.x * clear_color.w, 255 * clear_color.y * clear_color.w, 255 * clear_color.z * clear_color.w, 255 * clear_color.w);
 }
-void saveImage(FrameBuffer& fbuffer){
-     stbi_flip_vertically_on_write(true);
-     stbi_write_png("output.png", SCR_WIDTH, SCR_HEIGHT, 4, fbuffer.colorBuffer, SCR_WIDTH * 4);
-      
+void saveImage(FrameBuffer &fbuffer)
+{
+    stbi_flip_vertically_on_write(true);
+    stbi_write_png("output.png", SCR_WIDTH, SCR_HEIGHT, 4, fbuffer.colorBuffer, SCR_WIDTH * 4);
 }
 int main(int argc, char **argv)
 {
@@ -106,25 +107,92 @@ int main(int argc, char **argv)
     Matrix viewMat = lookat(eye, center, up);
     Matrix viewPortMat = viewport(SCR_WIDTH, SCR_HEIGHT);
     // Matrix projMat = projection(89.f, SCR_WIDTH / SCR_HEIGHT, 0.1f, -0.9f);
-    Matrix projMat = projection(50.f, SCR_WIDTH / SCR_HEIGHT, 9.f, -0.1f);
-
+    Matrix projMat = projection(fov, SCR_WIDTH / SCR_HEIGHT, 0.9f, -0.1f);
     Matrix modelMat = Matrix::identity();
 
     Model *obj_cube = new Model("resources/obj/cube/cube.obj");
-    SimpleShader shader(modelMat, viewMat, projMat, viewPortMat);//default
+    SimpleShader shader(modelMat, viewMat, projMat, viewPortMat); //default
     shader.setData(obj_cube);
 
-    //相机参数
-    float test[3];
-    float fov = 40;
+    //skybox
+    /*
+    std::vector<std::string> _skyboxes = {
+        "resources/skybox/right.jpg",
+        "resources/skybox/left.jpg",
+        "resources/skybox/top.jpg",
+        "resources/skybox/bottom.jpg",
+        "resources/skybox/front.jpg",
+        "resources/skybox/back.jpg",
+    };
+    Texture texture;
+    int id_skybox;
+    for (int i = 0; i < _skyboxes.size(); i++)
+    {
+        int tmp = texture.loadTexture(_skyboxes[i]);
+        if (i == 0)
+            id_skybox = tmp;
+    }
+    SkyboxShader skyshader(Matrix::identity(), viewMat, projMat, viewPortMat);
+    skyshader.setTexture(&texture);
+    skyshader.setData(obj_cube);
+
+    skyshader.id_ = id_skybox;
+    skyshader.type = LDR;
+*/
+    Texture texture;
+
+    std::string _bg = "resources/hdr/snow_machine/test8_Bg.jpg";
+    int id_bg = texture.loadTexture(_bg);
+    Matrix projMat_sp = projection(90.f, SCR_WIDTH / SCR_HEIGHT, 2, -10.f);
+
+    GenSkyboxShader gshader(Matrix::identity(), Matrix::identity(), projMat_sp, viewPortMat);
+    gshader.setTexture(&texture);
+    gshader.setData(obj_cube);
+
+    std::vector<Image> skyboxmaps;
+    for (int i = 0; i < 6; i++)
+        skyboxmaps.push_back(Image(SCR_WIDTH, SCR_HEIGHT, 3, UINT));
+
+    gshader.id = id_bg;
+    gshader.type = LDR;
+    int id_skybox;
+    std::vector<Matrix> cubemap_viewmats;
+    for (int i = 0; i < 6; i++)
+        cubemap_viewmats.push_back(lookat(camera.eye, camera.eye+cubemap_dirs[i], cubemap_ups[i]));
+
+    for (int i = 0; i < 6; i++)
+    {
+        gshader.view = cubemap_viewmats[i];
+        gshader.image = &skyboxmaps[i];
+        render(gshader, &fbuffer, TRIANGLE);
+
+        int id_ = texture.setTexture(skyboxmaps[i]);
+        if (i == 0)
+            id_skybox = id_;
+
+        stbi_flip_vertically_on_write(true);
+        stbi_write_png(cubemap_output_paths[i].c_str(), SCR_WIDTH, SCR_HEIGHT, 4, fbuffer.colorBuffer, SCR_WIDTH * 4);
+        fbuffer.clearBuffer();
+    }
+    SkyboxShader skyshader(Matrix::identity(), viewMat, projMat, viewPortMat);
+    skyshader.setTexture(&texture);
+    skyshader.setData(obj_cube);
+    // skyshader.id_ = id_ibl_irradiance;
+    //skyshader.type=HDR;
+    skyshader.id_ = id_skybox;
+    skyshader.type = LDR;
+
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
 
         fbuffer.clearColor(getBackGroundC(clear_color));
         fbuffer.clearZBuffer();
-        shader.view=camera.update();
+        shader.view = camera.update();
         render(shader, &fbuffer, TRIANGLE);
+        projMat = projection(fov, SCR_WIDTH / SCR_HEIGHT, 0.9f, -0.1f);
+        skyshader.projection = projMat;
+        //render(skyshader, &fbuffer, TRIANGLE);
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -160,7 +228,6 @@ int main(int argc, char **argv)
 
             ImGui::Begin("^u^ let's start rendering!"); // Create a window called "Hello, world!" and append into it.
 
-            //ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
             ImGui::RadioButton("campera", true);
 
             ImGui::SliderFloat("fov", &fov, 0, 90);
@@ -172,18 +239,18 @@ int main(int argc, char **argv)
 
             ImGui::ColorEdit3("clear color", (float *)&clear_color); // Edit 3 floats representing a color
 
-            if (ImGui::Button("load obj~")) // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+            //if (ImGui::Button("load obj~")) // Buttons return true when clicked (most widgets return true when edited/activated)
+            //  counter++;
+            //ImGui::SameLine();
+            //ImGui::Text("counter = %d", counter);
 
-            if (ImGui::Button("save")) saveImage(fbuffer);
+            if (ImGui::Button("save"))
+                saveImage(fbuffer);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
 
-        // Rendering
         ImGui::Render();
 
         int display_w, display_h;
@@ -200,7 +267,7 @@ int main(int argc, char **argv)
         glfwSwapBuffers(window);
     }
 
-    //delete objmodel;
+    delete obj_cube;
     glfwTerminate();
     return 0;
 }
@@ -298,9 +365,9 @@ int initWindow()
     glfwSwapInterval(1); // Enable vsync
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-   // glfwSetMouseButtonCallback(window, mouse_button_callback);
-   // glfwSetCursorPosCallback(window, mouse_callback);
-   // glfwSetScrollCallback(window, scroll_callback);
+    // glfwSetMouseButtonCallback(window, mouse_button_callback);
+    // glfwSetCursorPosCallback(window, mouse_callback);
+    // glfwSetScrollCallback(window, scroll_callback);
 
     //隐藏光标
     //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);

@@ -27,15 +27,15 @@ void triangle(Vec4f *pts, IShader &shader, FrameBuffer *fbuffer)
     Vec2i P;
     Vec4i color;
     //简单裁剪
-    for (int i = 0; i < 2; i++)
+    /*for (int i = 0; i < 2; i++)
     {
         bboxmin[i] = std::max(0.f, bboxmin[i]);
         bboxmax[i] = std::min((float)SCR_WIDTH, bboxmax[i]);
-    }
-    //  bboxmin.x = std::max(0.f, bboxmin.x);
-    //bboxmin.y = std::max(0.f, bboxmin.y);
-    //bboxmax.x = std::min((float)SCR_WIDTH, bboxmax.x);
-    //bboxmax.y = std::min((float)SCR_HEIGHT, bboxmax.y);
+    }*/
+      bboxmin.x = std::max(0.f, bboxmin.x);
+      bboxmin.y = std::max(0.f, bboxmin.y);
+      bboxmax.x = std::min((float)SCR_WIDTH, bboxmax.x);
+      bboxmax.y = std::min((float)SCR_HEIGHT, bboxmax.y);
 
     for (P.x = bboxmin.x; P.x <= bboxmax.x; P.x++)
     {

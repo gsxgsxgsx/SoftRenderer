@@ -78,7 +78,7 @@ struct GenSkyboxShader : public IShader
         {
             color = texture->getTexture2Di(uv[0], uv[1], id,BILINEAR);
             image->setBuffer((round)(p_ss.x), (round)(p_ss.y), color);
-            //printColor(color);
+            
             //std::cout<<(round)(p_ss.x)<<" "<< (round)(p_ss.y)<<std::endl;
         }
         else if (type == HDR)
