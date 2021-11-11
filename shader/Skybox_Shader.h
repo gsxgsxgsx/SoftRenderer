@@ -59,20 +59,27 @@ struct SkyboxShader : public IShader
         Vec4f gl_Vertex = embed<4>(data->vert(i, j));
         texcoords3D.set_col(j, proj<3>(gl_Vertex));
 
-        Vec3f n = data->normal(i, j).normalize();
-        Vec3f v = (eyePos - proj<3>(gl_Vertex));
-        if (n * v > 0)
-        {
-             std::cout << "failed" << std::endl;
-             return Vec4f(__FLT_MIN__, -1, depth, -1);
-        }
+       
+        //std::cout<<eyePos<<std::endl;
 
         for (int i = 0; i < 3; i++)
             view[i][3] = 0; //移除位移部分
 
+        perspectiveDivide(gl_Vertex);
+
         gl_Vertex = projection * view * gl_Vertex;
 
-        perspectiveDivide(gl_Vertex);
+        Vec3f n = data->normal(i, j).normalize();
+        //Vec3f v = (Vec3f(0,0,0) - proj<3>(gl_Vertex));
+        Vec3f v = (proj<3>(gl_Vertex));
+        //std::cout<<gl_Vertex<<" n:"<<n<<std::endl;
+        //std::cout<<"v:"<<v<<std::endl;
+        if (n * v < 0)
+        {
+             //std::cout << "failed" << std::endl;
+             //return Vec4f(__FLT_MIN__, -1, depth, -1);
+        }
+        
         gl_Vertex = viewPort * gl_Vertex;
 
          //gl_Vertex[2] = depth;//须视锥裁剪才可开启

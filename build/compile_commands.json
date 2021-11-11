@@ -1,0 +1,67 @@
+[
+{
+  "directory": "/Users/olirt/SoftRenderer/build",
+  "command": "/usr/bin/clang++  -I/usr/local/include -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14 -std=gnu++11 -o CMakeFiles/TinyRenderer.dir/imgui-master/imgui.cpp.o -c /Users/olirt/SoftRenderer/imgui-master/imgui.cpp",
+  "file": "/Users/olirt/SoftRenderer/imgui-master/imgui.cpp"
+},
+{
+  "directory": "/Users/olirt/SoftRenderer/build",
+  "command": "/usr/bin/clang++  -I/usr/local/include -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14 -std=gnu++11 -o CMakeFiles/TinyRenderer.dir/imgui-master/imgui_demo.cpp.o -c /Users/olirt/SoftRenderer/imgui-master/imgui_demo.cpp",
+  "file": "/Users/olirt/SoftRenderer/imgui-master/imgui_demo.cpp"
+},
+{
+  "directory": "/Users/olirt/SoftRenderer/build",
+  "command": "/usr/bin/clang++  -I/usr/local/include -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14 -std=gnu++11 -o CMakeFiles/TinyRenderer.dir/imgui-master/imgui_draw.cpp.o -c /Users/olirt/SoftRenderer/imgui-master/imgui_draw.cpp",
+  "file": "/Users/olirt/SoftRenderer/imgui-master/imgui_draw.cpp"
+},
+{
+  "directory": "/Users/olirt/SoftRenderer/build",
+  "command": "/usr/bin/clang++  -I/usr/local/include -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14 -std=gnu++11 -o CMakeFiles/TinyRenderer.dir/imgui-master/imgui_tables.cpp.o -c /Users/olirt/SoftRenderer/imgui-master/imgui_tables.cpp",
+  "file": "/Users/olirt/SoftRenderer/imgui-master/imgui_tables.cpp"
+},
+{
+  "directory": "/Users/olirt/SoftRenderer/build",
+  "command": "/usr/bin/clang++  -I/usr/local/include -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14 -std=gnu++11 -o CMakeFiles/TinyRenderer.dir/imgui-master/imgui_widgets.cpp.o -c /Users/olirt/SoftRenderer/imgui-master/imgui_widgets.cpp",
+  "file": "/Users/olirt/SoftRenderer/imgui-master/imgui_widgets.cpp"
+},
+{
+  "directory": "/Users/olirt/SoftRenderer/build",
+  "command": "/usr/bin/clang++  -I/usr/local/include -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14 -std=gnu++11 -o CMakeFiles/TinyRenderer.dir/imgui-master/backends/imgui_impl_glfw.cpp.o -c /Users/olirt/SoftRenderer/imgui-master/backends/imgui_impl_glfw.cpp",
+  "file": "/Users/olirt/SoftRenderer/imgui-master/backends/imgui_impl_glfw.cpp"
+},
+{
+  "directory": "/Users/olirt/SoftRenderer/build",
+  "command": "/usr/bin/clang++  -I/usr/local/include -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14 -std=gnu++11 -o CMakeFiles/TinyRenderer.dir/imgui-master/backends/imgui_impl_opengl3.cpp.o -c /Users/olirt/SoftRenderer/imgui-master/backends/imgui_impl_opengl3.cpp",
+  "file": "/Users/olirt/SoftRenderer/imgui-master/backends/imgui_impl_opengl3.cpp"
+},
+{
+  "directory": "/Users/olirt/SoftRenderer/build",
+  "command": "/usr/bin/clang++  -I/usr/local/include -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14 -std=gnu++11 -o CMakeFiles/TinyRenderer.dir/data_model.cpp.o -c /Users/olirt/SoftRenderer/data_model.cpp",
+  "file": "/Users/olirt/SoftRenderer/data_model.cpp"
+},
+{
+  "directory": "/Users/olirt/SoftRenderer/build",
+  "command": "/usr/bin/clang++  -I/usr/local/include -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14 -std=gnu++11 -o CMakeFiles/TinyRenderer.dir/geometry.cpp.o -c /Users/olirt/SoftRenderer/geometry.cpp",
+  "file": "/Users/olirt/SoftRenderer/geometry.cpp"
+},
+{
+  "directory": "/Users/olirt/SoftRenderer/build",
+  "command": "/usr/bin/clang++  -I/usr/local/include -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14 -std=gnu++11 -o CMakeFiles/TinyRenderer.dir/math.cpp.o -c /Users/olirt/SoftRenderer/math.cpp",
+  "file": "/Users/olirt/SoftRenderer/math.cpp"
+},
+{
+  "directory": "/Users/olirt/SoftRenderer/build",
+  "command": "/usr/bin/clang++  -I/usr/local/include -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14 -std=gnu++11 -o CMakeFiles/TinyRenderer.dir/our_gl.cpp.o -c /Users/olirt/SoftRenderer/our_gl.cpp",
+  "file": "/Users/olirt/SoftRenderer/our_gl.cpp"
+},
+{
+  "directory": "/Users/olirt/SoftRenderer/build",
+  "command": "/usr/bin/clang++  -I/usr/local/include -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14 -std=gnu++11 -o CMakeFiles/TinyRenderer.dir/data_input.cpp.o -c /Users/olirt/SoftRenderer/data_input.cpp",
+  "file": "/Users/olirt/SoftRenderer/data_input.cpp"
+},
+{
+  "directory": "/Users/olirt/SoftRenderer/build",
+  "command": "/usr/bin/clang++  -I/usr/local/include -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14 -std=gnu++11 -o CMakeFiles/TinyRenderer.dir/main.cpp.o -c /Users/olirt/SoftRenderer/main.cpp",
+  "file": "/Users/olirt/SoftRenderer/main.cpp"
+}
+]

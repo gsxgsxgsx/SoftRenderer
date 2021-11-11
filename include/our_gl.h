@@ -78,7 +78,7 @@ struct PointLight
     float constant;
     float linear;
     float quadratic;
-
+//1, 0.22, 0.2
     PointLight(Vec3f lightPos_, Vec4i color_, float constant_, float linear_, float quadratic_) : pos(lightPos_), color(color_), constant(constant_), linear(linear_), quadratic(quadratic_) {}
     PointLight(Vec3f lightPos_, Vec4f fcolor_, float constant_, float linear_, float quadratic_) : pos(lightPos_), fcolor(fcolor_), constant(constant_), linear(linear_), quadratic(quadratic_) {}
 

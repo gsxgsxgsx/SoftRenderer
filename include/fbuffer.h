@@ -99,7 +99,7 @@ public:
 
     //post-process------------------------------------------------------------------------
 
-    float invertColor()
+    void invertColor()
     {
         for (int i = 0; i < SCR_WIDTH; i++)
         {

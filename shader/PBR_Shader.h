@@ -11,19 +11,18 @@ struct PBRShader : public IShader
     Data *data;
     Texture *texture;
     Image *buffer;
-    int id_ao;
-    int id_albedo;
-    int id_tn;
-    int id_m;
-    int id_r;
-    int id_ibl_irr;
-    int id_ibl_spec;
-    int id_ibl_brdf;
+    int id_ao = -1;     //ao
+    int id_albedo = -1; //albedo:diffuse color
+    int id_tn = -1;     //tagnent normal
+    int id_m = -1;      //material
+    int id_r = -1;      //roughness
 
-    float roughness;
-    bool readNfromTex = true;
-    bool readRfromTex = false;
-    bool readAOfromTex = true;
+    int id_ibl_irr = -1;
+    int id_ibl_spec = -1;
+    int id_ibl_brdf = -1;
+
+    float roughness = 0;
+    float metallic = 0;
 
     PointLight *plight;
 
@@ -85,18 +84,24 @@ struct PBRShader : public IShader
     {
         Vec2f uv = texcoords * bar;
 
-        if (readRfromTex)
+        float ao = 1;
+
+        if (id_r > -1)
             roughness = texture->getTexture2Di(uv[0], uv[1], id_r).x / 255.f;
 
-        float metallic = texture->getTexture2Di(uv[0], uv[1], id_m).x / 255.f;
-        float ao = 1;
-        if (readAOfromTex)
+        if (id_m > -1)
+            metallic = texture->getTexture2Di(uv[0], uv[1], id_m).x / 255.f;
+
+        if (id_ao > -1)
             ao = (texture->getTexture2Di(uv[0], uv[1], id_ao).x) / 255.f;
 
+        //if (id_albedo > -1)
         Vec4i alc = texture->getTexture2Di(uv[0], uv[1], id_albedo);          //[0,255] hdr:[1,inf_max] ldr[0,1]
         Vec3f albedo = Vec3f(alc[0] / 255.f, alc[1] / 255.f, alc[2] / 255.f); //反照率，只包含表面的颜色（或者折射吸收系数）// albedo = Vec3f(pow(albedo.x, 2.2f), pow(albedo.y, 2.2f), pow(albedo.z, 2.2f));//SRGB 需要转换到线性空间 RGB
+
         Vec3f N;
-        if (readNfromTex)
+        //N=N * (-1.f);
+        if (id_tn > -1)
         {
             N = color2normal(texture->getTexture2Di(uv[0], uv[1], id_tn));
             mat<3, 3, float> TBN = getTBN(fragPoses_modelSpace, uvs);
@@ -104,8 +109,9 @@ struct PBRShader : public IShader
         }
         else
         {
-            N = normals * bar;
+            N = (normals * bar).normalize(); //phong插值
         }
+
         mat<4, 4, float> u_MIT = (model).invert_transpose(); //?没有不等比变换就不需要，物体在右手坐标系，天空盒ndc在左手？
         N = proj<3>(u_MIT * embed<4>(N)).normalize();
 
@@ -130,6 +136,7 @@ struct PBRShader : public IShader
         float denominator = 4.0 * std::max((N * V), 0.f) * std::max((N * L), 0.f) + 0.001;
 
         Vec3f specular = nominator / denominator;
+
         Vec3f kS = F;
         Vec3f kD = Vec3f(1.0) - kS;
         kD = kD * (1.0 - metallic); //金属漫反射为0
@@ -138,19 +145,23 @@ struct PBRShader : public IShader
 
         Vec3f Lo;
         for (int i = 0; i < 3; i++)
-            Lo[i] = (kD[i] * albedo[i] / M_PI+specular[i]) * radiance[i] * NdotL;
+            Lo[i] = (kD[i] * albedo[i] / M_PI + specular[i]) * radiance[i] * NdotL;
 
         //间接光照即环境光--------------------------------------------------------------------------------
         ////漫反射辐照度贴图
+
         Vec3f irradiance2 = proj<3>(texture->getTexture3Df(N, id_ibl_irr));
         Vec3f diffuse = Vec3f(irradiance2.x * albedo.x, irradiance2.y * albedo.y, irradiance2.z * albedo.z);
 
         ////镜面反射贴图
-        Vec3f prefilteredColor = proj<3>(texture->getTexture3Df(N, id_ibl_spec)); //未完成
+        // Vec3f n2=N * (-1.f);
+
+        int id_spec = id_ibl_spec + 6 * (roughness / 0.25);
+
+        Vec3f prefilteredColor = proj<3>(texture->getTexture3Df(N, id_spec)); //未完成
         Vec4i brdf = texture->getTexture2Di(std::max((N * V), 0.f), roughness, id_ibl_brdf);
         Vec2f envBRDF(brdf.x / 255.f, brdf.y / 255.f);
 
-        //Vec3f specular2 = Vec3f(env.x * albedo.x, env.y * albedo.y, env.z * albedo.z);
         F = fresnelSchlick(std::max((H * V), 0.f), Vec3f(roughness, roughness, roughness));
 
         Vec3f tmp = F * envBRDF.x + envBRDF.y;
@@ -159,7 +170,7 @@ struct PBRShader : public IShader
         Vec3f ambient;
         for (int i = 0; i < 3; i++)
             ambient[i] = (kD[i] * diffuse[i] + specular2[i]) * ao * albedo[i];
-
+            
         //直接光+间接光+色调映射--------------------------------------------------------------------------------
 
         Vec3f total = ambient + Lo;

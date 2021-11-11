@@ -5,6 +5,7 @@
 #include "../include/our_gl.h"
 #include "../include/math.h"
 #include "../include/texture.h"
+
 enum CTYPE
 {
     HDR,
@@ -27,7 +28,8 @@ struct GenSkyboxShader : public IShader
     mat<4, 4, float> viewPort;
 
     mat<3, 3, float> fragPoses_screenSpace;
-    mat<2, 3, float> texcoords;
+
+    mat<3, 3, float> texcoords3D;
 
     float width;
     float height;
@@ -57,8 +59,10 @@ struct GenSkyboxShader : public IShader
     {
         assert(data != nullptr);
         Vec4f gl_Vertex = embed<4>(data->vert(i, j));
-        Vec2f uv = sphericalMap(proj<3>(gl_Vertex));
-        texcoords.set_col(j, uv);
+        texcoords3D.set_col(j, proj<3>(gl_Vertex));
+
+        //for (int i = 0; i < 3; i++)
+          //  view[i][3] = 0; 
 
         gl_Vertex = projection * view * model * gl_Vertex;
         perspectiveDivide(gl_Vertex);
@@ -72,14 +76,14 @@ struct GenSkyboxShader : public IShader
     virtual bool fragment(Vec3f bar, Vec4i &color)
     {
         Vec3f p_ss = fragPoses_screenSpace * bar;
-        Vec2f uv = texcoords * bar;
+        Vec3f uv3d = texcoords3D * bar;
+        Vec2f uv = sphericalMap(uv3d.normalize());
 
         if (type == LDR)
         {
-            color = texture->getTexture2Di(uv[0], uv[1], id,BILINEAR);
+            color = texture->getTexture2Di(uv[0], uv[1], id, BILINEAR);
             image->setBuffer((round)(p_ss.x), (round)(p_ss.y), color);
-            
-            //std::cout<<(round)(p_ss.x)<<" "<< (round)(p_ss.y)<<std::endl;
+
         }
         else if (type == HDR)
         {
@@ -87,9 +91,9 @@ struct GenSkyboxShader : public IShader
             Vec4f hdr = texture->getTexture2Df(uv[0], uv[1], id);
             image->setBufferf(p_ss.x / (float)width, p_ss.y / (float)height, hdr);
             Vec3f ldr = ReinhardToneMapping(hdr);
-            color = Vec4i((uint8_t)(ldr.x * 255), (uint8_t)(ldr.y * 255), (uint8_t)(ldr.z * 255), 255);
+            color = Vec4i((uint8_t)(ldr.x * 255), (uint8_t)(ldr.y * 255), (uint8_t)(ldr.z * 255), 255);//输出用于可视化
         }
-
+return false;
         //printColor(color);
     }
 };

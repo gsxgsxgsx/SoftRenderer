@@ -123,8 +123,6 @@ struct Camera
         yaw += xoffset;
         pitch += yoffset;
 
-
-
         updateCameraVectors();
     }
 
@@ -154,8 +152,9 @@ struct Camera
         up = cross(right, front).normalize();
     }
 
-    Matrix update(){
-        return lookat(eye,center,up);
+    Matrix update()
+    {
+        return lookat(eye, eye + front, up);
     }
 };
 

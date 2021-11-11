@@ -392,7 +392,7 @@ public:
     {
         // pts.normalize();
         float u = 0, v = 0;
-        Vec3f pts2 = -1 * pts;
+       // Vec3f pts = -1 * pts;
 
         int idx = getFaceidx(pts, u, v);
 

@@ -46,10 +46,17 @@ struct SimpleShader : public IShader
     {
         assert(data != nullptr);
         Vec4f gl_Vertex = embed<4>(data->vert(i, j));
+
+        //std::cout <<"before: "<<gl_Vertex  << std::endl;
+
         gl_Vertex = projection * view * model * gl_Vertex;
         //fragPoses_depth_clipSpace[j] = 1 / gl_Vertex[2]; //透视插值
+//std::cout <<"after pro: "<< gl_Vertex  << std::endl;
 
         perspectiveDivide(gl_Vertex);
+
+        //std::cout <<"after per: "<< gl_Vertex  << std::endl;
+
         gl_Vertex = viewPort * gl_Vertex;
 
         //texcoords2D.set_col(j, data->uv(i, j));
